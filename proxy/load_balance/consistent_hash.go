@@ -2,9 +2,11 @@ package load_balance
 
 import (
 	"errors"
+	"fmt"
 	"hash/crc32"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -96,5 +98,20 @@ func (c *ConsistentHashBalance) SetConf(conf LoadBalanceConf) {
 }
 
 func (c *ConsistentHashBalance) Update() {
-
+	if conf, ok := c.conf.(*LoadBalanceZkConf); ok {
+		fmt.Println("Update get conf:", conf.GetConf())
+		c.keys = nil
+		c.hashMap = nil
+		for _, ip := range conf.GetConf() {
+			c.Add(strings.Split(ip, ",")...)
+		}
+	}
+	if conf, ok := c.conf.(*LoadBalanceCheckConf); ok {
+		fmt.Println("Update get conf:", conf.GetConf())
+		c.keys = nil
+		c.hashMap = map[uint32]string{}
+		for _, ip := range conf.GetConf() {
+			c.Add(strings.Split(ip, ",")...)
+		}
+	}
 }

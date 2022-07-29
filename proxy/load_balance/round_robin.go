@@ -2,6 +2,8 @@ package load_balance
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 )
 
 type RoundRobinBalance struct {
@@ -15,7 +17,7 @@ func (r *RoundRobinBalance) Add(params ...string) error {
 	if len(params) == 0 {
 		return errors.New("param len 1 at least")
 	}
-	r.rss = append(r.rss, params...)
+	r.rss = append(r.rss, params[0])
 	return nil
 }
 
@@ -41,4 +43,18 @@ func (r *RoundRobinBalance) SetConf(conf LoadBalanceConf) {
 }
 
 func (r *RoundRobinBalance) Update() {
+	if conf, ok := r.conf.(*LoadBalanceZkConf); ok {
+		fmt.Println("Update get conf:", conf.GetConf())
+		r.rss = []string{}
+		for _, ip := range conf.GetConf() {
+			r.Add(strings.Split(ip, ",")...)
+		}
+	}
+	if conf, ok := r.conf.(*LoadBalanceCheckConf); ok {
+		fmt.Println("Update get conf:", conf.GetConf())
+		r.rss = nil
+		for _, ip := range conf.GetConf() {
+			r.Add(strings.Split(ip, ",")...)
+		}
+	}
 }
